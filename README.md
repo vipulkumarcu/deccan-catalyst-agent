@@ -16,5 +16,5 @@ An autonomous AI agent built for the Deccan AI Catalyst Hackathon (April 2026).
 ## ⚙️ Setup & Installation
 1. **Clone the repo:**
    ```bash
-   git clone [https://github.com/your-username/deccan-catalyst-agent.git](https://github.com/vipulkumarcu/deccan-catalyst-agent.git)
+   git clone ("https://github.com/vipulkumarcu/deccan-catalyst-agent.git")
    cd deccan-catalyst-agent
