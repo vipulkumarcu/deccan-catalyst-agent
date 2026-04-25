@@ -1,22 +1,35 @@
+import json
+from typing import List, Dict, Any, Callable
+
 class ToolManager:
     """
-    This class will manage all the 'Hands' of our agent.
-    When we get the challenge at 5 PM, we will add real tools here.
+    Orchestrates 'Function Calling' for the Nexus Agent.
+    Maintains the mapping between LLM schemas and local Python execution.
     """
     def __init__(self):
-        self.tools_list = []
+        self._tool_definitions: List[Dict[str, Any]] = []
+        self._execution_registry: Dict[str, Callable] = {}
 
-    def get_tool_definitions(self):
-        """
-        This returns a list of tools that we tell the AI it can use.
-        """
-        # We will fill this with JSON-like descriptions later
-        return self.tools_list
+    def register_tool(self, definition: Dict[str, Any], function: Callable):
+        tool_name = definition.get("function", {}).get("name")
+        if not tool_name:
+            raise ValueError("Nexus Error: Tool definition is missing a name.")
+        self._tool_definitions.append(definition)
+        self._execution_registry[tool_name] = function
 
-    def execute_tool(self, tool_name, arguments):
-        """
-        This is the 'Switch Case' that runs the actual Python code
-        when the AI asks to use a tool.
-        """
-        # We will add 'if/else' statements here for each tool
-        return f"Tool {tool_name} not implemented yet."
+    def get_tool_definitions(self) -> List[Dict[str, Any]]:
+        return self._tool_definitions
+
+    def execute_tool(self, tool_name: str, arguments: Dict[str, Any]) -> str:
+        try:
+            if tool_name not in self._execution_registry:
+                return f"Error: Tool '{tool_name}' is not registered."
+
+            target_function = self._execution_registry[tool_name]
+            result = target_function(**arguments)
+
+            # Returning JSON string makes it easier for the LLM to parse
+            return json.dumps(result)
+
+        except Exception as e:
+            return f"Execution Failure in {tool_name}: {str(e)}"

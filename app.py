@@ -15,7 +15,42 @@ USER_ICON = "https://cdn-icons-png.flaticon.com/512/9187/9187532.png"
 AGENT_ICON = "https://cdn-icons-png.flaticon.com/512/8744/8744028.png"
 
 # ==========================================
-# 2. NEXUS SYSTEM STYLING (CSS)
+# 2. NEXUS TOOLBOX (REGISTER YOUR TOOLS HERE)
+# ==========================================
+
+# EXAMPLE TOOL: Learning Roadmap Generator
+# 1. Define the Schema (What the AI reads)
+ROADMAP_SCHEMA = {
+    "type": "function",
+    "function": {
+        "name": "get_learning_roadmap",
+        "description": "Generates a list of high-quality resources for a specific technical skill gap.",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "skill": {"type": "string", "description": "The skill to research (e.g., 'Docker', 'FastAPI')."}
+            },
+            "required": ["skill"]
+        }
+    }
+}
+
+# 2. Define the Logic (The actual Python code)
+def get_learning_roadmap(skill):
+    # This is where you'd call a real API or search a database
+    # For the demo, we return structured mock data
+    return {
+        "skill": skill,
+        "resources": [
+            f"Official {skill} Documentation",
+            f"Advanced {skill} Course on Coursera",
+            f"Nexus AI Hands-on Lab: Mastering {skill}"
+        ],
+        "estimated_time": "2 weeks"
+    }
+
+# ==========================================
+# 3. NEXUS SYSTEM STYLING (CSS) - UNTOUCHED
 # ==========================================
 st.markdown(f"""
     <style>
@@ -48,12 +83,10 @@ st.markdown(f"""
     }}
     .chat-pill-wrapper:hover {{ background-color: #1f2937 !important; }}
 
-    /* Remove the colored line above the primary (selected) button */
     button[kind="primary"] {{
         border-top: none !important;
     }}
 
-    /* Sidebar Chat Button Styling */
     .chat-pill-wrapper button {{
         background: transparent !important; border: none !important;
         text-align: left !important; padding: 12px 16px !important;
@@ -61,7 +94,6 @@ st.markdown(f"""
         box-shadow: none !important; height: auto !important; min-height: 44px;
     }}
 
-    /* 3-DOT MENU POPOVER (Hover visibility) */
     [data-testid="stPopover"] > button {{
         background: transparent !important; border: none !important;
         color: #94a3b8 !important; opacity: 0 !important;
@@ -69,7 +101,6 @@ st.markdown(f"""
     }}
     .chat-pill-wrapper:hover [data-testid="stPopover"] > button {{ opacity: 1 !important; }}
 
-    /* Popover Delete Button styling */
     [data-testid="stPopover"] button[kind="secondary"] {{
         background: transparent !important; border: none !important;
         font-weight: 500; text-align: left; padding: 10px 16px;
@@ -80,23 +111,31 @@ st.markdown(f"""
     </style>
 """, unsafe_allow_html=True)
 
-# Initialize Session State
+# ==========================================
+# 4. STATE INITIALIZATION & TOOL PLUGINS
+# ==========================================
 if "agent" not in st.session_state:
+    # 1. Instantiate the Brain
     st.session_state.agent = CatalystAgent()
+
+    # 2. PLUG IN THE TOOLS (Register them here)
+    st.session_state.agent.tools.register_tool(ROADMAP_SCHEMA, get_learning_roadmap)
+
     st.session_state.messages = []
     st.session_state.current_session_id = None
 
 # ==========================================
-# 3. SIDEBAR NAVIGATION
+# 5. SIDEBAR NAVIGATION
 # ==========================================
 with st.sidebar:
     st.markdown('<h1 class="nexus-gradient sidebar-nexus">NEXUS</h1>', unsafe_allow_html=True)
     st.markdown('<p class="tagline">Decoding Potential. Architecting Mastery.</p>', unsafe_allow_html=True)
 
-    # New Assessment Action
     st.markdown('<div class="centered-btn stButton">', unsafe_allow_html=True)
     if st.button("New Assessment", key="new_as_btn"):
         st.session_state.agent = CatalystAgent()
+        # Register tools again for the new agent instance
+        st.session_state.agent.tools.register_tool(ROADMAP_SCHEMA, get_learning_roadmap)
         st.session_state.messages = []
         st.session_state.current_session_id = None
         st.rerun()
@@ -115,12 +154,10 @@ with st.sidebar:
         s_name = s_id.split('_')[0]
         is_active = (st.session_state.current_session_id == s_id)
 
-        # Gemini-style Row
         st.markdown('<div class="chat-pill-wrapper">', unsafe_allow_html=True)
         col_text, col_menu = st.columns([5, 1])
 
         with col_text:
-            # Re-implementing the 'primary' type for the red highlight
             if st.button(
                 f"{s_name}",
                 key=f"btn_{file}",
@@ -143,11 +180,12 @@ with st.sidebar:
                     if st.session_state.current_session_id == s_id:
                         st.session_state.current_session_id = None
                         st.session_state.agent = CatalystAgent()
+                        # Register tools again
+                        st.session_state.agent.tools.register_tool(ROADMAP_SCHEMA, get_learning_roadmap)
                         st.session_state.messages = []
                     st.rerun()
         st.markdown('</div>', unsafe_allow_html=True)
 
-# JavaScript for Gradient Buttons
 st.components.v1.html("""
     <script>
     const btns = window.parent.document.querySelectorAll('button');
@@ -160,10 +198,9 @@ st.components.v1.html("""
 """, height=0)
 
 # ==========================================
-# 4. MAIN INTERFACE
+# 6. MAIN INTERFACE
 # ==========================================
 if not st.session_state.current_session_id or not st.session_state.agent.resume_text:
-    # --- HERO AREA ---
     st.markdown("<br><br>", unsafe_allow_html=True)
     st.markdown('<h1 class="nexus-gradient main-nexus">NEXUS</h1>', unsafe_allow_html=True)
     st.markdown('<p style="text-align: center; color: #888; font-size:1.2rem; margin-top:-15px;">Decoding Potential. Architecting Mastery.</p>', unsafe_allow_html=True)
@@ -199,7 +236,6 @@ if not st.session_state.current_session_id or not st.session_state.agent.resume_
         st.markdown('</div>', unsafe_allow_html=True)
 
 else:
-    # --- CHAT AREA ---
     s_display = st.session_state.current_session_id.split('_')[0]
     st.markdown(f"### <span style='color:#00d4ff'>Assessment:</span> {s_display}", unsafe_allow_html=True)
 

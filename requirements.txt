@@ -1,3 +1,5 @@
-python-dotenv
+streamlit
 groq
-google-genai
+python-dotenv
+PyPDF2
+python-docx

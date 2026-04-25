@@ -1,20 +1,43 @@
+"""
+Nexus AI Configuration Module
+Centralizes environment variables, model parameters, and system constants.
+"""
+
 import os
 from dotenv import load_dotenv
 
-# Loading the .env file
+# Load environment variables from local .env file
 load_dotenv()
 
 class Config:
     """
-    This class holds all our 'Settings'.
-    If we need to add more keys later (like a Google Search key),
-    we add them here.
+    Static configuration class to manage global settings.
+    Provides a single source of truth for all modules.
     """
+
+    # --- AI Engine Credentials ---
     GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 
-    # We can set a default model here so we don't have to type it every time.
+    # --- Model Configuration ---
+    # Llama 3.3 70B Versatile is optimized for reasoning and assessment tasks
     MODEL_NAME = "llama-3.3-70b-versatile"
 
-# A quick safety check:
-if not Config.GROQ_API_KEY:
-    print("WARNING: GROQ_API_KEY is not set in your .env file!")
+    # --- System Paths ---
+    # Centralized location for session storage
+    SESSION_DIR = "sessions"
+
+    @classmethod
+    def validate(cls):
+        """
+        Critical safety check to ensure environment variables are loaded.
+        Prevents the application from starting in a broken state.
+        """
+        if not cls.GROQ_API_KEY:
+            # Raising an error is better than a print statement for debugging
+            raise EnvironmentError(
+                "NEXUS CONFIG ERROR: 'GROQ_API_KEY' not found in environment. "
+                "Ensure your .env file is correctly configured in the project root."
+            )
+
+# Execute validation on module import
+Config.validate()
